@@ -9,7 +9,6 @@ import string
 import pyperclip
 
 CONFIG_PATH = 'settings.gimg'
-GITHUB_URL = 'https://github.com/'
 TOKEN = ''
 REPO_NAME = ''
 FILE_PATH = ''
@@ -37,12 +36,19 @@ def save_config(conf):
 def get_random_string(length):
     return ''.join(random.choices(string.ascii_lowercase, k=length))
 
-def generate_file_name(files, filetype):
-    file_name = get_random_string(5) + '.' + filetype
-    filenames = [f.path for f in files]
-    while file_name in filenames:
-        file_name = get_random_string(5) + '.' + filetype
+def generate_file_name(files, file_type):
+    file_name = get_random_string(5) + '.' + file_type
+    file_names = [f.path for f in files]
+    while file_name in file_names:
+        file_name = get_random_string(5) + '.' + file_type
     return file_name
+
+def generate_link(file_name, repo, repo_name, user_name):
+    github_url = 'https://github.com/'
+    end = '?raw=true'
+    branch = repo.get_branches()[0].name
+    return github_url + user_name + '/' + repo_name + '/blob/' + branch + '/' + file_name + end
+
 
 
 arg_parser = argparse.ArgumentParser(description='Gimage - Github as image hosting')
@@ -107,4 +113,14 @@ with open(FILE_PATH, 'rb') as f:
 
 file_name = generate_file_name(img_repo.get_contents(''), FILE_TYPE)
 commit_message = 'Add ' + file_name
-img_repo.create_file(file_name, commit_message, data)
+
+try:
+    img_repo.create_file(file_name, commit_message, data)
+except Exception as e:
+    print('Something went wrong')
+    print(e)
+
+img_link = generate_link(file_name, img_repo, REPO_NAME, user.login)
+print('Your image has been uploaded. You can find it at: ', img_link)
+pyperclip.copy(img_link)
+print('The link has been copied to clipboard!')
