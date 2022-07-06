@@ -4,9 +4,11 @@ import sys
 import configparser
 from github import Github
 import imghdr
-import base64
+import random
+import string
 
 CONFIG_PATH = 'settings.gimg'
+GITHUB_URL = 'https://github.com/'
 TOKEN = ''
 REPO_NAME = ''
 FILE_PATH = ''
@@ -30,6 +32,13 @@ def is_file_valid(filepath):
 def save_config(conf):
     with open(CONFIG_PATH, 'w') as configfile:
         conf.write(configfile)
+
+def generate_file_name(files, filetype):
+    file_name = ''.join(random.choices(string.ascii_lowercase, k=5)) + '.' + filetype
+    filenames = [f.path for f in files]
+    while file_name in filenames:
+        file_name = ''.join(random.choices(string.ascii_lowercase, k=5)) + '.' + filetype
+    return file_name
 
 
 arg_parser = argparse.ArgumentParser(description='Gimage - Github as image hosting')
@@ -69,7 +78,8 @@ elif len(REPO_NAME) == 0:
 FILE_PATH = args.file
 
 # check if image
-if imghdr.what(FILE_PATH) is None:
+FILE_TYPE = imghdr.what(FILE_PATH)
+if FILE_TYPE is None:
     print('Unsupported image type. Currently supported image types: rgb, gif, pbm, pgm, ppm, tiff, rast, xbm, jpeg, bmp, png, webp and exr.')
     sys.exit()
 
@@ -84,4 +94,13 @@ if args.nr:
         if repo.name == REPO_NAME and repo.fork is False:
             in_repo = True
     if not in_repo:
-        user.create_repo(REPO_NAME)
+        img_repo = user.create_repo(REPO_NAME)
+else:
+    img_repo = user.get_repo(REPO_NAME)
+
+with open(FILE_PATH, 'rb') as f:
+    data = f.read()
+
+file_name = generate_file_name(img_repo.get_contents(''), FILE_TYPE)
+commit_message = 'Add ' + file_name
+img_repo.create_file(file_name, commit_message, data)
