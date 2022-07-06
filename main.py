@@ -6,6 +6,7 @@ from github import Github
 import imghdr
 import random
 import string
+import pyperclip
 
 CONFIG_PATH = 'settings.gimg'
 GITHUB_URL = 'https://github.com/'
@@ -33,11 +34,14 @@ def save_config(conf):
     with open(CONFIG_PATH, 'w') as configfile:
         conf.write(configfile)
 
+def get_random_string(length):
+    return ''.join(random.choices(string.ascii_lowercase, k=length))
+
 def generate_file_name(files, filetype):
-    file_name = ''.join(random.choices(string.ascii_lowercase, k=5)) + '.' + filetype
+    file_name = get_random_string(5) + '.' + filetype
     filenames = [f.path for f in files]
     while file_name in filenames:
-        file_name = ''.join(random.choices(string.ascii_lowercase, k=5)) + '.' + filetype
+        file_name = get_random_string(5) + '.' + filetype
     return file_name
 
 
