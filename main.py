@@ -36,8 +36,12 @@ def save_config(conf):
 def get_random_string(length):
     return ''.join(random.choices(string.ascii_lowercase, k=length))
 
-def generate_file_name(files, file_type):
+def generate_file_name(repo, file_type):
     file_name = get_random_string(5) + '.' + file_type
+    try:
+        files = repo.get_contents('')
+    except:
+        return file_name
     file_names = [f.path for f in files]
     while file_name in file_names:
         file_name = get_random_string(5) + '.' + file_type
@@ -105,13 +109,15 @@ if args.nr:
             in_repo = True
     if not in_repo:
         img_repo = user.create_repo(REPO_NAME)
+    else:
+        img_repo = user.get_repo(REPO_NAME)
 else:
     img_repo = user.get_repo(REPO_NAME)
 
 with open(FILE_PATH, 'rb') as f:
     data = f.read()
 
-file_name = generate_file_name(img_repo.get_contents(''), FILE_TYPE)
+file_name = generate_file_name(img_repo, FILE_TYPE)
 commit_message = 'Add ' + file_name
 
 try:
@@ -119,6 +125,7 @@ try:
 except Exception as e:
     print('Something went wrong')
     print(e)
+    sys.exit()
 
 img_link = generate_link(file_name, img_repo, REPO_NAME, user.login)
 print('Your image has been uploaded. You can find it at: ', img_link)
