@@ -1,14 +1,20 @@
 import argparse
-from os import environ
-import os.path
+import os
 import sys
 import configparser
 from github import Github
 import imghdr
+import base64
 
 CONFIG_PATH = 'settings.gimg'
 TOKEN = ''
 REPO_NAME = ''
+FILE_PATH = ''
+
+arg = sys.argv[-1]
+if len(sys.argv) > 1 and arg[0] != '--':
+    sys.argv[-1] = '--file'
+    sys.argv.append(arg)
 
 config = configparser.ConfigParser()
 arg_parser = argparse.ArgumentParser(description='Gimage - Github as image hosting')
@@ -29,8 +35,8 @@ def save_config(conf):
 arg_parser = argparse.ArgumentParser(description='Gimage - Github as image hosting')
 arg_parser.add_argument('-nr', dest='nr', action='store_true', help='Set if needed to create new repo')
 arg_parser.add_argument('--repo', dest='repo', type=str, help='Repository name to create')
-arg_parser.add_argument('--upload', dest='file', type=lambda x: is_file_valid(x), help='Image to upload')
 arg_parser.add_argument('--add_token', dest='token', type=str, help='Github personal access token')
+arg_parser.add_argument('--file', dest='file', type=is_file_valid, help='Image to upload')
 
 args = arg_parser.parse_args()
 config.read(CONFIG_PATH)
@@ -60,12 +66,22 @@ elif len(REPO_NAME) == 0:
     print('Make sure to set a repo name using --repo flag. To create a new repo, add -nr flag to the command.')
     sys.exit()
 
-if args.file:
-    print(args.file)
+FILE_PATH = args.file
+
+# check if image
+if imghdr.what(FILE_PATH) is None:
+    print('Unsupported image type. Currently supported image types: rgb, gif, pbm, pgm, ppm, tiff, rast, xbm, jpeg, bmp, png, webp and exr.')
     sys.exit()
 
-if args.file is None and (args.repo is None or args.token is None):
-    print()
-
 g = Github(TOKEN)
-print(g.get_user().login)
+user = g.get_user()
+
+# create the repo if needed
+if args.nr:
+    repos = user.get_repos()
+    in_repo = False
+    for repo in repos:
+        if repo.name == REPO_NAME and repo.fork is False:
+            in_repo = True
+    if not in_repo:
+        user.create_repo(REPO_NAME)
