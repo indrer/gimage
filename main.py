@@ -2,11 +2,11 @@ import argparse
 import os
 import sys
 import configparser
-from github import Github
 import imghdr
 import random
 import string
-import pyperclip
+from github import Github
+
 
 CONFIG_PATH = 'settings.gimg'
 TOKEN = ''
@@ -129,5 +129,3 @@ except Exception as e:
 
 img_link = generate_link(file_name, img_repo, REPO_NAME, user.login)
 print('Your image has been uploaded. You can find it at: ', img_link)
-pyperclip.copy(img_link)
-print('The link has been copied to clipboard!')
