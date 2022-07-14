@@ -122,9 +122,6 @@ data = io.BytesIO()
 img.save(data, format=FILE_TYPE)
 data = data.getvalue()
 
-# with open(FILE_PATH, 'rb') as f:
-#     data = f.read()
-
 file_name = generate_file_name(img_repo, FILE_TYPE)
 commit_message = 'Add ' + file_name
 
